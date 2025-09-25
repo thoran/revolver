@@ -1,0 +1,76 @@
+#!/usr/bin/env ruby
+# defocus
+
+# 20250925
+# 0.0.0
+
+require 'MacOS/HardwarePort'
+require 'MacOS/IfConfig'
+
+class Defocus
+  RESOLVERS = [
+    {name: 'Cloudflare', servers: ['1.1.1.1', '1.0.0.1']},
+    {name: 'Google', servers: ['8.8.8.8', '8.8.4.4']},
+    {name: 'Quad9', servers: ['9.9.9.9', '149.112.112.112']},
+    {name: 'OpenDNS', servers: ['208.67.222.222', '208.67.220.220']},
+    {name: 'AdGuard', servers: ['94.140.14.14', '94.140.15.15']},
+    {name: 'Mullvad', servers: ['194.242.2.2', '194.242.2.3']}
+  ]
+
+  class << self
+    def current_dns(hardware_port = primary_hardware_port)
+      output = `networksetup -getdnsservers "#{hardware_port}"`.strip
+      return [] if output.include?("There aren't any DNS Servers set")
+      output.split("\n")
+    end
+
+    def primary_hardware_port
+      active_interface = MacOS::IfConfig.active_interfaces.first
+      raise "No active network interfaces found" unless active_interface
+
+      hardware_port = MacOS::HardwarePort.find_by_interface(active_interface.interface)
+      raise("Hardware port not found for #{active_interface.interface}") unless hardware_port
+
+      hardware_port.name
+    end
+
+    def set_dns(servers, hardware_port = primary_hardware_port)
+      system("sudo networksetup -setdnsservers #{hardware_port} #{servers.join(' ')}")
+      $?.success?
+    end
+
+    def random_resolver
+      current_resolver = RESOLVERS.find{|r| r[:servers] == current_dns}
+      non_current_resolvers = current_resolver ? (RESOLVERS - [current_resolver]) : RESOLVERS
+      non_current_resolvers.sample
+    end
+
+    def switch
+      resolver = random_resolver
+      set_dns(resolver[:servers])
+      resolver
+    end
+
+    def status
+      current_servers = current_dns
+      current_resolver = RESOLVERS.find{|r| r[:servers] == current_servers}
+
+      puts "Interface: #{primary_hardware_port}"
+      puts "Current DNS: #{current_servers.join(', ')}"
+      puts "Resolver: #{current_resolver ? current_resolver[:name] : 'Unknown/Custom'}"
+    end
+  end
+end
+
+def main
+  case ARGV[0]
+  when 'switch'
+    Defocus.switch
+  when 'status'
+    Defocus.status
+  else
+    puts "Usage: defocus [switch|status]"
+  end
+end
+
+main
