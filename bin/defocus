@@ -2,7 +2,7 @@
 # defocus
 
 # 20250925
-# 0.0.1
+# 0.1.0
 
 require 'MacOS/HardwarePort'
 require 'MacOS/IfConfig'
@@ -90,9 +90,18 @@ class Defocus
     end
 
     def switch
-      resolver = random_resolver
-      set_dns(resolver[:servers])
-      resolver
+      old_dns = current_dns
+      new_resolver = random_resolver
+      success = set_dns(new_resolver[:servers])
+      raise "networksetup command failed" unless success
+
+      sleep(1)
+      new_dns = current_dns
+
+      unless new_dns == new_resolver[:servers]
+        raise "DNS switch verification failed. Expected #{resolver[:servers]}, got #{new_dns}"
+      end
+      new_resolver
     end
 
     def status
