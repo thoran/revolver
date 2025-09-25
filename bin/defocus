@@ -2,19 +2,63 @@
 # defocus
 
 # 20250925
-# 0.0.0
+# 0.0.1
 
 require 'MacOS/HardwarePort'
 require 'MacOS/IfConfig'
 
 class Defocus
   RESOLVERS = [
-    {name: 'Cloudflare', servers: ['1.1.1.1', '1.0.0.1']},
-    {name: 'Google', servers: ['8.8.8.8', '8.8.4.4']},
-    {name: 'Quad9', servers: ['9.9.9.9', '149.112.112.112']},
-    {name: 'OpenDNS', servers: ['208.67.222.222', '208.67.220.220']},
-    {name: 'AdGuard', servers: ['94.140.14.14', '94.140.15.15']},
-    {name: 'Mullvad', servers: ['194.242.2.2', '194.242.2.3']}
+    {
+      name: 'AdGuard',
+      servers: ['94.140.14.14', '94.140.15.15'],
+      source: 'https://github.com/curl/curl/wiki/DNS-over-HTTPS'
+    },
+    {
+      name: 'CleanBrowsing',
+      servers: ['185.228.168.9', '185.228.169.9'],
+      source: 'https://github.com/curl/curl/wiki/DNS-over-HTTPS'
+    },
+    {
+      name: 'Cloudflare',
+      servers: ['1.1.1.1', '1.0.0.1'],
+      source: 'https://github.com/curl/curl/wiki/DNS-over-HTTPS'
+    },
+    {
+      name: 'Control D',
+      servers: ['76.76.2.0', '76.76.10.0'],
+      source: 'https://github.com/curl/curl/wiki/DNS-over-HTTPS'
+    },
+    {
+      name: 'Google',
+      servers: ['8.8.8.8', '8.8.4.4'],
+      source: 'https://github.com/curl/curl/wiki/DNS-over-HTTPS'
+    },
+    {
+      name: 'Mullvad',
+      servers: ['194.242.2.2', '194.242.2.3'],
+      source: 'https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/v3/public-resolvers.md'
+    },
+    {
+      name: 'NextDNS',
+      servers: ['45.90.28.0', '45.90.30.0'],
+      source: 'https://github.com/curl/curl/wiki/DNS-over-HTTPS'
+    },
+    {
+      name: 'OpenDNS',
+      servers: ['208.67.222.222', '208.67.220.220'],
+      source: 'https://github.com/curl/curl/wiki/DNS-over-HTTPS'
+    },
+    {
+      name: 'OpenNIC',
+      servers: ['134.195.4.2', '144.24.127.228'],
+      source: 'https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/v3/public-resolvers.md'
+    },
+    {
+      name: 'Quad9',
+      servers: ['9.9.9.9', '149.112.112.112'],
+      source: 'https://github.com/curl/curl/wiki/DNS-over-HTTPS'
+    }
   ]
 
   class << self
