@@ -1,11 +1,22 @@
 #!/usr/bin/env ruby
 # defocus
 
-# 20250925
-# 0.1.1
+# 20250925, 27
+# 0.2.0
 
+# Changes since 0.1:
+# -/0: Now VPN-aware.
+# 1. + Defocus.vpn_up?
+# 2. ~ Defocus.switch: Handle either VPN up or not.
+# 3. + Defocus.switch_with_vpn: Shell out to `mercurial`.
+# 4. + Defocus.switch_without_vpn: Call set_dns().
+# 5. ~ Defocus.verify_dns_change: Signature change, passing in old_dns, so as to be able to check old_dns and new_dns are different, because the switch is still a fail if the candidate is current because it means that somehow nothing changed.
+# 6. ~ Defocus.verify_dns_change: Conditionally sleep(5) for when the VPN is up due to longer switching times.
+
+require 'FileUtils/which'
 require 'MacOS/HardwarePort'
 require 'MacOS/IfConfig'
+require 'MacOS/VPN'
 
 class Defocus
   RESOLVERS = [
@@ -62,39 +73,16 @@ class Defocus
   ]
 
   class << self
-    def current_dns(hardware_port = primary_hardware_port)
-      output = `networksetup -getdnsservers "#{hardware_port}"`.strip
-      return [] if output.include?("There aren't any DNS Servers set")
-      output.split("\n")
-    end
-
-    def primary_hardware_port
-      active_interface = MacOS::IfConfig.active_interfaces.first
-      raise "No active network interfaces found" unless active_interface
-
-      hardware_port = MacOS::HardwarePort.find_by_interface(active_interface.interface)
-      raise("Hardware port not found for #{active_interface.interface}") unless hardware_port
-
-      hardware_port.name
-    end
-
-    def set_dns(servers, hardware_port = primary_hardware_port)
-      system("sudo networksetup -setdnsservers #{hardware_port} #{servers.join(' ')}")
-      raise "networksetup command failed" unless $?.success?
-    end
-
-    def random_resolver
-      current_resolver = RESOLVERS.find{|r| r[:servers] == current_dns}
-      non_current_resolvers = current_resolver ? (RESOLVERS - [current_resolver]) : RESOLVERS
-      non_current_resolvers.sample
-    end
-
     def switch
       old_dns = current_dns
       new_resolver = random_resolver
       candidate_dns = new_resolver[:servers]
-      set_dns(candidate_dns)
-      verify_dns_change(candidate_dns)
+      if vpn_up?
+        switch_with_vpn(candidate_dns)
+      else
+        switch_without_vpn(candidate_dns)
+      end
+      verify_dns_change(old_dns, candidate_dns)
       new_resolver
     end
 
@@ -109,12 +97,67 @@ class Defocus
 
     private
 
-    def verify_dns_change(candidate_dns)
-      sleep(1)
-      new_dns = current_dns
-      unless new_dns == candidate_dns
-        raise "DNS switch verification failed. Expected #{candidate_dns}, got #{new_dns}"
+    def switch_with_vpn(candidate_dns)
+      unless mercurial_available?
+        raise "VPN detected but mercurial not found in PATH."
       end
+      system("mercurial switch --dns_servers #{candidate_dns.join(',')} --retain_endpoint")
+      unless $?.success?
+        raise "Failed to restart VPN with new DNS servers."
+      end
+    end
+
+    def switch_without_vpn(candidate_dns)
+      set_dns(candidate_dns)
+    end
+
+    def random_resolver
+      current_resolver = RESOLVERS.find{|r| r[:servers] == current_dns}
+      non_current_resolvers = current_resolver ? (RESOLVERS - [current_resolver]) : RESOLVERS
+      non_current_resolvers.sample
+    end
+
+    def primary_hardware_port
+      active_interface = MacOS::IfConfig.active_interfaces.first
+      raise "No active network interfaces found" unless active_interface
+
+      hardware_port = MacOS::HardwarePort.find_by_interface(active_interface.interface)
+      raise("Hardware port not found for #{active_interface.interface}") unless hardware_port
+
+      hardware_port.name
+    end
+
+    def current_dns(hardware_port = primary_hardware_port)
+      output = `networksetup -getdnsservers "#{hardware_port}"`.strip
+      return [] if output.include?("There aren't any DNS Servers set")
+      output.split("\n")
+    end
+
+    def set_dns(dns_servers, hardware_port = primary_hardware_port)
+      system("sudo networksetup -setdnsservers #{hardware_port} #{dns_servers.join(' ')}")
+      raise "networksetup command failed" unless $?.success?
+    end
+
+    def verify_dns_change(old_dns, candidate_dns)
+      if vpn_up?
+        sleep(5) # It takes longer for the VPN to be dropped and brought back up again.
+      else
+        sleep(1)
+      end
+      new_dns = current_dns
+      unless old_dns != new_dns && new_dns == candidate_dns
+        raise "DNS switch verification failed. Started with #{old_dns.join(',')}, expected #{candidate_dns.join(',')}, but got #{new_dns.join(',')}."
+      end
+    end
+
+    # predicate methods
+
+    def mercurial_available?
+      FileUtils.which('mercurial')
+    end
+
+    def vpn_up?
+      MacOS::VPN.up?
     end
   end
 end
@@ -128,6 +171,9 @@ def main
   else
     puts "Usage: defocus [switch|status]"
   end
+rescue => e
+  puts "Error: #{e.message}"
+  exit 1
 end
 
-main
+main if $0 == __FILE__
