@@ -2,20 +2,19 @@
 # revolver
 
 # 20250929
-# 0.4.1
+# 0.5.0
 
 # Description: Switch DNS resolvers at random.
 
-# Changes since 0.3:
-# -/0: Allow selection of a specific resolver for listing or switching.
-# 1. + find_resolver(): Return the resolver requested by name or raise.
-# 2. ~ list(): If resolver_name is present then list that resolver only.
-# 3. ~ switch(): If resolver_name is present, then find that resolver, else choose a random resolver.
-# 4. ~ main(): Introduce ARGV[1] to list and switch calls; and change the usage string accordingly.
-# 5. ~ verify_dns_change(): Reduce sleep from 5 to 3 as that seems to be just enough time.
-# 0/1: Handle the edge case where the same DNS resolver is given as is current.
-# 6. + verify_proposed_change(): Check whether an effective no-op is happening.
-# 7. ~ switch(): Verify the proposed change as soon as we have a candidate.
+# Changes since 0.4:
+# -/0: Randomly select a resolver and optionally return JSON, but don't pull the trigger.
+# 1. + Revolver.spin(): Select a random resolver and return its details (for orchestration).
+# 2. ~ main(): + 'spin' sub-command handling.
+# 3. + require 'switches.rb'
+# 4. + switches(): Allow setting the format for the 'spin' sub-command.
+
+require 'json'
+require 'switches.rb'
 
 require 'FileUtils/which'
 require 'MacOS/HardwarePort'
@@ -88,6 +87,20 @@ class Revolver
       end
     end
 
+    def spin(format: nil)
+      format ||= 'console'
+      display_resolver(random_resolver, format: format)
+    end
+
+    def status
+      current_servers = current_dns
+      current_resolver = RESOLVERS.find{|r| r[:servers] == current_servers}
+
+      puts "Interface: #{primary_hardware_port}"
+      puts "Current DNS: #{current_servers.join(', ')}"
+      puts "Resolver: #{current_resolver ? current_resolver[:name] : 'Unknown/Custom'}"
+    end
+
     def switch(resolver_name = nil)
       old_dns = current_dns
       candidate_resolver = resolver_name ? find_resolver(resolver_name) : random_resolver
@@ -102,15 +115,6 @@ class Revolver
       candidate_resolver
     end
 
-    def status
-      current_servers = current_dns
-      current_resolver = RESOLVERS.find{|r| r[:servers] == current_servers}
-
-      puts "Interface: #{primary_hardware_port}"
-      puts "Current DNS: #{current_servers.join(', ')}"
-      puts "Resolver: #{current_resolver ? current_resolver[:name] : 'Unknown/Custom'}"
-    end
-
     private
 
     def find_resolver(name)
@@ -119,10 +123,15 @@ class Revolver
       resolver
     end
 
-    def display_resolver(resolver)
-      puts "Name: #{resolver[:name]}"
-      puts "DNS Servers: #{resolver[:servers].join(', ')}"
-      puts "Source: #{resolver[:source]}"
+    def display_resolver(resolver, format: 'console')
+      case format
+      when 'console'
+        puts "Name: #{resolver[:name]}"
+        puts "DNS Servers: #{resolver[:servers].join(', ')}"
+        puts "Source: #{resolver[:source]}"
+      when 'json'
+        puts resolver.to_json
+      end
     end
 
     def switch_with_vpn(candidate_dns)
@@ -197,16 +206,24 @@ class Revolver
   end
 end
 
+def switches
+  @switches ||= Switches.new do |s|
+    s.set(:f, :format)
+  end
+end
+
 def main
   case ARGV[0]
   when 'list'
     Revolver.list(ARGV[1])
-  when 'switch'
-    Revolver.switch(ARGV[1])
+  when 'spin'
+    Revolver.spin(format: switches.format)
   when 'status'
     Revolver.status
+  when 'switch'
+    Revolver.switch(ARGV[1])
   else
-    puts "Usage: revolver [list [resolver_name] | switch [resolver_name] | status]"
+    puts "Usage: revolver {list [name] | spin [-f|--format {console|json}] | status | switch [name]}"
   end
 rescue => e
   puts "Error: #{e.message}"
