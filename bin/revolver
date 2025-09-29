@@ -2,16 +2,18 @@
 # revolver
 
 # 20250929
-# 0.5.0
+# 0.6.0
 
 # Description: Switch DNS resolvers at random.
 
-# Changes since 0.4:
-# -/0: Randomly select a resolver and optionally return JSON, but don't pull the trigger.
-# 1. + Revolver.spin(): Select a random resolver and return its details (for orchestration).
-# 2. ~ main(): + 'spin' sub-command handling.
-# 3. + require 'switches.rb'
-# 4. + switches(): Allow setting the format for the 'spin' sub-command.
+# Changes since 0.5:
+# -/0: Allow 'list' and 'status' commands to return JSON.
+# 1. ~ Revolver.list: + format argument and pass format to display_resolver().
+# 2. ~ Revolver.status: + format argument and move existing 'console' display logic to display_status().
+# 3. + Revolver.display_status(): Handle console and JSON output for the 'status' command.
+# 4. ~ main(): Call Revolver.list with format.
+# 5. ~ main(): Call Revolver.status with format.
+# 6. ~ main(): Usage string string: Document format flag for all applicable commands
 
 require 'json'
 require 'switches.rb'
@@ -76,13 +78,14 @@ class Revolver
   ]
 
   class << self
-    def list(resolver_name = nil)
+    def list(resolver_name = nil, format: nil)
+      format ||= 'console'
       if resolver_name
         resolver = find_resolver(resolver_name)
-        display_resolver(resolver)
+        display_resolver(resolver, format: format)
       else
         RESOLVERS.each do |resolver|
-          display_resolver(resolver)
+          display_resolver(resolver, format: format)
         end
       end
     end
@@ -92,13 +95,11 @@ class Revolver
       display_resolver(random_resolver, format: format)
     end
 
-    def status
+    def status(format: nil)
+      format ||= 'console'
       current_servers = current_dns
       current_resolver = RESOLVERS.find{|r| r[:servers] == current_servers}
-
-      puts "Interface: #{primary_hardware_port}"
-      puts "Current DNS: #{current_servers.join(', ')}"
-      puts "Resolver: #{current_resolver ? current_resolver[:name] : 'Unknown/Custom'}"
+      display_status(current_resolver, format: format)
     end
 
     def switch(resolver_name = nil)
@@ -131,6 +132,23 @@ class Revolver
         puts "Source: #{resolver[:source]}"
       when 'json'
         puts resolver.to_json
+      end
+    end
+
+    def display_status(resolver, format: 'console')
+      name = resolver ? resolver[:name] : 'Unknown/Custom'
+      dns_servers = (resolver ? resolver[:servers] : current_dns).join(', ')
+      case format
+      when 'console'
+        puts "Interface: #{primary_hardware_port}"
+        puts "Name: #{name}"
+        puts "DNS Servers: #{dns_servers}"
+      when 'json'
+        puts({
+          interface: primary_hardware_port,
+          name: name,
+          dns_servers: dns_servers,
+        }.to_json)
       end
     end
 
@@ -215,15 +233,23 @@ end
 def main
   case ARGV[0]
   when 'list'
-    Revolver.list(ARGV[1])
+    Revolver.list(ARGV[1], format: switches.format)
   when 'spin'
     Revolver.spin(format: switches.format)
   when 'status'
-    Revolver.status
+    Revolver.status(format: switches.format)
   when 'switch'
     Revolver.switch(ARGV[1])
   else
-    puts "Usage: revolver {list [name] | spin [-f|--format {console|json}] | status | switch [name]}"
+    puts "Usage: revolver <command> [args] [options]"
+    puts "Commands:"
+    puts "  list [name]          List all or specific resolver"
+    puts "  spin                 Select random resolver"
+    puts "  status               Show current DNS configuration"
+    puts "  switch [name]        Switch to random or specific resolver"
+    puts "Options:"
+    puts "  -f, --format FORMAT  Output format: console (default) or json"
+    puts "                       (applies to: list, spin, status)"
   end
 rescue => e
   puts "Error: #{e.message}"
