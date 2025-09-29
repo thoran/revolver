@@ -2,25 +2,18 @@
 # revolver
 
 # 20250929
-# 0.7.0
+# 0.8.0
 
 # Description: Switch DNS resolvers at random.
 
-# Changes since 0.6:
-# -/0: Be able to load resolvers from a file.
-# 1. ~ Revolver: class methods --> instance methods
-# 2. + Revolver#initialize: Pass in resolvers dependency.
-# 3. ~ list(): /RESOLVERS/@resolvers/
-# 4. ~ status(): /RESOLVERS/@resolvers/
-# 5. ~ find_resolver(): /RESOLVERS/@resolvers/
-# 6. ~ random_resolver(): /RESOLVERS/@resolvers/
-# 7. ~ switches(): + -d, --data, --data_file, --data_filepath, --resolvers_data_filepath
-# 8. + supplied_resolvers_data_filepath(): User-supplied data filepath via switches.
-# 9. + default_resolvers_data_filepath(): Return the default resolvers data filepath (~/.config/revolver/resolvers.json).
-# 10. + resolvers_data_filepath(): Choose either the supplied or the default filepath and expand it.
-# 11. + resolvers(): Load resolvers from a file if exists, else fallback to Revolver::RESOLVERS.
-# 12. ~ main(): Instantiate Revolver with resolvers for each sub-command invocation.
+# Changes since 0.7:
+# -/0: + init sub-command, enabling generation of a resolvers JSON data file from the built-in Revolver::RESOLVERS.
+# 1. + require 'fileutils': For directory creation in init command.
+# 2. + init(): Generates a sample data file with the default Revolver::RESOLVERS at resolvers_data_filepath.
+# 3. ~ main(): + 'init' sub-command handler.
+# 4. ~ main(): ~ Usage to include 'init' sub-command.
 
+require 'fileutils'
 require 'json'
 require 'switches.rb'
 
@@ -259,8 +252,22 @@ def resolvers
   end
 end
 
+def init
+  target_path = resolvers_data_filepath
+  if File.exist?(target_path)
+    raise "Config file already exists at: #{target_path}"
+  end
+  target_dir = File.dirname(target_path)
+  FileUtils.mkdir_p(target_dir)
+  File.write(target_path, JSON.pretty_generate(Revolver::RESOLVERS))
+  puts "Created config file at: #{target_path}"
+  puts "Edit this file to customize your DNS resolvers."
+end
+
 def main
   case ARGV[0]
+  when 'init'
+    init
   when 'list'
     Revolver.new(resolvers).list(ARGV[1], format: switches.format)
   when 'spin'
@@ -272,6 +279,7 @@ def main
   else
     puts "Usage: revolver <command> [args] [options]"
     puts "Commands:"
+    puts "  init                 Generate a sample resolvers data file"
     puts "  list [name]          List all or specific resolver"
     puts "  spin                 Select random resolver"
     puts "  status               Show current DNS configuration"
