@@ -2,14 +2,17 @@
 # revolver
 
 # 20250929
-# 0.3.0
+# 0.4.0
 
 # Description: Switch DNS resolvers at random.
 
-# Changes since 0.2:
-# -/0: /defocus/revolver/; + list sub-command
-# 1. Renamed from defocus to revolver.
-# 2. + Revolver.list: Show all resolvers.
+# Changes since 0.3:
+# -/0: Allow selection of a specific resolver for listing or switching.
+# 1. + find_resolver(): Return the resolver requested by name or raise.
+# 2. ~ list(): If resolver_name is present then list that resolver only.
+# 3. ~ switch(): If resolver_name is present, then find that resolver, else choose a random resolver.
+# 4. ~ main(): Introduce ARGV[1] to list and switch calls; and change the usage string accordingly.
+# 5. ~ verify_dns_change(): Reduce sleep from 5 to 3 as that seems to be just enough time.
 
 require 'FileUtils/which'
 require 'MacOS/HardwarePort'
@@ -71,15 +74,20 @@ class Revolver
   ]
 
   class << self
-    def list
-      RESOLVERS.each do |resolver|
+    def list(resolver_name = nil)
+      if resolver_name
+        resolver = find_resolver(resolver_name)
         display_resolver(resolver)
+      else
+        RESOLVERS.each do |resolver|
+          display_resolver(resolver)
+        end
       end
     end
 
-    def switch
+    def switch(resolver_name = nil)
       old_dns = current_dns
-      new_resolver = random_resolver
+      new_resolver = resolver_name ? find_resolver(resolver_name) : random_resolver
       candidate_dns = new_resolver[:servers]
       if vpn_up?
         switch_with_vpn(candidate_dns)
@@ -100,6 +108,12 @@ class Revolver
     end
 
     private
+
+    def find_resolver(name)
+      resolver = RESOLVERS.find{|r| r[:name].downcase == name.downcase}
+      raise "Unknown resolver: #{name}" unless resolver
+      resolver
+    end
 
     def display_resolver(resolver)
       puts "Name: #{resolver[:name]}"
@@ -150,7 +164,7 @@ class Revolver
 
     def verify_dns_change(old_dns, candidate_dns)
       if vpn_up?
-        sleep(5) # It takes longer for the VPN to be dropped and brought back up again.
+        sleep(3) # It takes longer for the VPN to be dropped and brought back up again.
       else
         sleep(1)
       end
@@ -175,13 +189,13 @@ end
 def main
   case ARGV[0]
   when 'list'
-    Revolver.list
+    Revolver.list(ARGV[1])
   when 'switch'
-    Revolver.switch
+    Revolver.switch(ARGV[1])
   when 'status'
     Revolver.status
   else
-    puts "Usage: revolver [list|switch|status]"
+    puts "Usage: revolver [list [resolver_name] | switch [resolver_name] | status]"
   end
 rescue => e
   puts "Error: #{e.message}"
