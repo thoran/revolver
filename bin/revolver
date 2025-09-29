@@ -1,24 +1,22 @@
 #!/usr/bin/env ruby
-# defocus
+# revolver
 
-# 20250925, 27
-# 0.2.0
+# 20250929
+# 0.3.0
 
-# Changes since 0.1:
-# -/0: Now VPN-aware.
-# 1. + Defocus.vpn_up?
-# 2. ~ Defocus.switch: Handle either VPN up or not.
-# 3. + Defocus.switch_with_vpn: Shell out to `mercurial`.
-# 4. + Defocus.switch_without_vpn: Call set_dns().
-# 5. ~ Defocus.verify_dns_change: Signature change, passing in old_dns, so as to be able to check old_dns and new_dns are different, because the switch is still a fail if the candidate is current because it means that somehow nothing changed.
-# 6. ~ Defocus.verify_dns_change: Conditionally sleep(5) for when the VPN is up due to longer switching times.
+# Description: Switch DNS resolvers at random.
+
+# Changes since 0.2:
+# -/0: /defocus/revolver/; + list sub-command
+# 1. Renamed from defocus to revolver.
+# 2. + Revolver.list: Show all resolvers.
 
 require 'FileUtils/which'
 require 'MacOS/HardwarePort'
 require 'MacOS/IfConfig'
 require 'MacOS/VPN'
 
-class Defocus
+class Revolver
   RESOLVERS = [
     {
       name: 'AdGuard',
@@ -73,6 +71,12 @@ class Defocus
   ]
 
   class << self
+    def list
+      RESOLVERS.each do |resolver|
+        display_resolver(resolver)
+      end
+    end
+
     def switch
       old_dns = current_dns
       new_resolver = random_resolver
@@ -96,6 +100,12 @@ class Defocus
     end
 
     private
+
+    def display_resolver(resolver)
+      puts "Name: #{resolver[:name]}"
+      puts "DNS Servers: #{resolver[:servers].join(', ')}"
+      puts "Source: #{resolver[:source]}"
+    end
 
     def switch_with_vpn(candidate_dns)
       unless mercurial_available?
@@ -164,12 +174,14 @@ end
 
 def main
   case ARGV[0]
+  when 'list'
+    Revolver.list
   when 'switch'
-    Defocus.switch
+    Revolver.switch
   when 'status'
-    Defocus.status
+    Revolver.status
   else
-    puts "Usage: defocus [switch|status]"
+    puts "Usage: revolver [list|switch|status]"
   end
 rescue => e
   puts "Error: #{e.message}"
