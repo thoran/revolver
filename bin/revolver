@@ -2,7 +2,7 @@
 # revolver
 
 # 20250929
-# 0.4.0
+# 0.4.1
 
 # Description: Switch DNS resolvers at random.
 
@@ -13,6 +13,9 @@
 # 3. ~ switch(): If resolver_name is present, then find that resolver, else choose a random resolver.
 # 4. ~ main(): Introduce ARGV[1] to list and switch calls; and change the usage string accordingly.
 # 5. ~ verify_dns_change(): Reduce sleep from 5 to 3 as that seems to be just enough time.
+# 0/1: Handle the edge case where the same DNS resolver is given as is current.
+# 6. + verify_proposed_change(): Check whether an effective no-op is happening.
+# 7. ~ switch(): Verify the proposed change as soon as we have a candidate.
 
 require 'FileUtils/which'
 require 'MacOS/HardwarePort'
@@ -87,15 +90,16 @@ class Revolver
 
     def switch(resolver_name = nil)
       old_dns = current_dns
-      new_resolver = resolver_name ? find_resolver(resolver_name) : random_resolver
-      candidate_dns = new_resolver[:servers]
+      candidate_resolver = resolver_name ? find_resolver(resolver_name) : random_resolver
+      verify_proposed_change(candidate_resolver)
+      candidate_dns = candidate_resolver[:servers]
       if vpn_up?
         switch_with_vpn(candidate_dns)
       else
         switch_without_vpn(candidate_dns)
       end
       verify_dns_change(old_dns, candidate_dns)
-      new_resolver
+      candidate_resolver
     end
 
     def status
@@ -160,6 +164,13 @@ class Revolver
     def set_dns(dns_servers, hardware_port = primary_hardware_port)
       system("sudo networksetup -setdnsservers #{hardware_port} #{dns_servers.join(' ')}")
       raise "networksetup command failed" unless $?.success?
+    end
+
+    def verify_proposed_change(candidate_resolver)
+      candidate_dns = candidate_resolver[:servers]
+      if candidate_dns == current_dns
+        raise "Already using #{candidate_resolver[:name]}"
+      end
     end
 
     def verify_dns_change(old_dns, candidate_dns)
