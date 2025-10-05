@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
 # revolver
 
-# 20250929
-# 0.8.0
+# 20251005
+# 0.8.1
 
 # Description: Switch DNS resolvers at random.
 
@@ -12,6 +12,8 @@
 # 2. + init(): Generates a sample data file with the default Revolver::RESOLVERS at resolvers_data_filepath.
 # 3. ~ main(): + 'init' sub-command handler.
 # 4. ~ main(): ~ Usage to include 'init' sub-command.
+# 0/1: ~ RESOLVER: - Mullvad (IP's are DOH/T not UDP/53)
+# 5. ~ RESOLVER: - Mullvad (IP's are DOH/T not UDP/53)
 
 require 'fileutils'
 require 'json'
@@ -48,11 +50,6 @@ class Revolver
       name: 'Google',
       servers: ['8.8.8.8', '8.8.4.4'],
       source: 'https://github.com/curl/curl/wiki/DNS-over-HTTPS'
-    },
-    {
-      name: 'Mullvad',
-      servers: ['194.242.2.2', '194.242.2.3'],
-      source: 'https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/v3/public-resolvers.md'
     },
     {
       name: 'NextDNS',
