@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
 # revolver
 
-# 20251005
-# 0.8.1
+# 20260126
+# 0.8.2
 
 # Description: Switch DNS resolvers at random.
 
@@ -14,10 +14,17 @@
 # 4. ~ main(): ~ Usage to include 'init' sub-command.
 # 0/1: ~ RESOLVER: - Mullvad (IP's are DOH/T not UDP/53)
 # 5. ~ RESOLVER: - Mullvad (IP's are DOH/T not UDP/53)
+# 1/2: Ensure selecting the correct hardware port; include all non-stdlib and non-gem libraries.
+# 6. ~ primary_hardware_port(): Use MacOS::IfConfig.up_interfaces instead of MacOS::IfConfig.active_interfaces and select only non-virtual interfaces.
+# 7. + require 'Kernel/require_gem'
+# 8. /require 'switches.rb'/require_gem 'switches.rb'/
+# 9. Include all non-stdlib and non-gem libraries.
+
+require 'Kernel/require_gem'
+require_gem 'switches.rb'
 
 require 'fileutils'
 require 'json'
-require 'switches.rb'
 
 require 'FileUtils/which'
 require 'MacOS/HardwarePort'
@@ -172,11 +179,11 @@ class Revolver
   end
 
   def primary_hardware_port
-    active_interface = MacOS::IfConfig.active_interfaces.first
-    raise "No active network interfaces found" unless active_interface
+    up_interface = MacOS::IfConfig.up_interfaces.detect{|i| !i.virtual?}
+    raise "No active network interfaces found" unless up_interface
 
-    hardware_port = MacOS::HardwarePort.find_by_interface(active_interface.interface)
-    raise("Hardware port not found for #{active_interface.interface}") unless hardware_port
+    hardware_port = MacOS::HardwarePort.find_by_interface(up_interface.name)
+    raise("Hardware port not found for #{up_interface.name}") unless hardware_port
 
     hardware_port.name
   end
