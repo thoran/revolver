@@ -1,26 +1,14 @@
 #!/usr/bin/env ruby
 # revolver
 
-# 20260128
-# 0.8.3
+# 20260213
+# 0.9.0
 
 # Description: Switch DNS resolvers at random.
 
-# Changes since 0.7:
-# -/0: + init sub-command, enabling generation of a resolvers JSON data file from the built-in Revolver::RESOLVERS.
-# 1. + require 'fileutils': For directory creation in init command.
-# 2. + init(): Generates a sample data file with the default Revolver::RESOLVERS at resolvers_data_filepath.
-# 3. ~ main(): + 'init' sub-command handler.
-# 4. ~ main(): ~ Usage to include 'init' sub-command.
-# 0/1: ~ RESOLVER: - Mullvad (IP's are DOH/T not UDP/53)
-# 5. ~ RESOLVER: - Mullvad (IP's are DOH/T not UDP/53)
-# 1/2: Ensure selecting the correct hardware port; include all non-stdlib and non-gem libraries.
-# 6. ~ primary_hardware_port(): Use MacOS::IfConfig.up_interfaces instead of MacOS::IfConfig.active_interfaces and select only non-virtual interfaces.
-# 7. + require 'Kernel/require_gem'
-# 8. /require 'switches.rb'/require_gem 'switches.rb'/
-# 9. Include all non-stdlib and non-gem libraries.
-# 2/3: Added a notes section for proposed sudoers file changes.
-# 10. + Notes section.
+# Changes since 0.8:
+# -/0: Return JSON consistently.
+# 1. ~ display_status(): Return JSON with :servers key as an array instead of :dns_servers key as a string.
 
 # Notes:
 # 1. For automated execution, ensure that /etc/sudoers has an entry like this as well as the ones for mercural (See mercurial for those):
@@ -151,18 +139,16 @@ class Revolver
 
   def display_status(resolver, format: 'console')
     name = resolver ? resolver[:name] : 'Unknown/Custom'
-    dns_servers = (resolver ? resolver[:servers] : current_dns).join(', ')
+    servers = resolver ? resolver[:servers] : current_dns
     case format
     when 'console'
-      puts "Interface: #{primary_hardware_port}"
       puts "Name: #{name}"
-      puts "DNS Servers: #{dns_servers}"
+      puts "DNS Servers: #{servers.join(', ')}"
+      puts "Interface: #{primary_hardware_port}"
     when 'json'
-      puts({
-        interface: primary_hardware_port,
-        name: name,
-        dns_servers: dns_servers,
-      }.to_json)
+      status = resolver || {}
+      status = status.merge(name: name, servers: servers, interface: primary_hardware_port)
+      puts status.to_json
     end
   end
 
