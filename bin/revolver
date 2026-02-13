@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
 # revolver
 
-# 20260126
-# 0.8.2
+# 20260128
+# 0.8.3
 
 # Description: Switch DNS resolvers at random.
 
@@ -19,6 +19,14 @@
 # 7. + require 'Kernel/require_gem'
 # 8. /require 'switches.rb'/require_gem 'switches.rb'/
 # 9. Include all non-stdlib and non-gem libraries.
+# 2/3: Added a notes section for proposed sudoers file changes.
+# 10. + Notes section.
+
+# Notes:
+# 1. For automated execution, ensure that /etc/sudoers has an entry like this as well as the ones for mercural (See mercurial for those):
+#   thoran ALL = NOPASSWD: /usr/sbin/networksetup
+# 2. Or, that there's a file /etc/sudoers.d/mercurial with the same kind of entry as well as the ones for mercural (See mercurial for those):
+#   thoran ALL = NOPASSWD: /usr/sbin/networksetup
 
 require 'Kernel/require_gem'
 require_gem 'switches.rb'
