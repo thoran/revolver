@@ -1,14 +1,16 @@
 #!/usr/bin/env ruby
 # revolver
 
-# 20260213
-# 0.9.0
+# 20260227
+# 0.10.0
 
 # Description: Switch DNS resolvers at random.
 
-# Changes since 0.8:
-# -/0: Return JSON consistently.
-# 1. ~ display_status(): Return JSON with :servers key as an array instead of :dns_servers key as a string.
+# Changes since 0.9:
+# -/0: Report actual DNS in use when VPN is active.
+# 1. ~ status(): Check vpn_up? and use current_vpn_dns instead of current_dns when VPN is active; pass servers to display_status.
+# 2. ~ display_status(): Accept servers as a parameter instead of falling back to current_dns internally.
+# 3. + current_vpn_dns(): Query mercurial status --format json for the DNS servers in the active WireGuard config.
 
 # Notes:
 # 1. For automated execution, ensure that /etc/sudoers has an entry like this as well as the ones for mercural (See mercurial for those):
@@ -76,6 +78,7 @@ class Revolver
     }
   ]
 
+  # begin commands
   def list(resolver_name = nil, format: nil)
     format ||= 'console'
     if resolver_name
@@ -95,9 +98,15 @@ class Revolver
 
   def status(format: nil)
     format ||= 'console'
-    current_servers = current_dns
+    current_servers = (
+      if vpn_up?
+        current_vpn_dns
+      else
+        current_dns
+      end
+    )
     current_resolver = @resolvers.find{|r| r[:servers] == current_servers}
-    display_status(current_resolver, format: format)
+    display_status(current_resolver, current_servers, format: format)
   end
 
   def switch(resolver_name = nil)
@@ -113,6 +122,7 @@ class Revolver
     verify_dns_change(old_dns, candidate_dns)
     candidate_resolver
   end
+  # end commands
 
   private
 
@@ -137,9 +147,8 @@ class Revolver
     end
   end
 
-  def display_status(resolver, format: 'console')
+  def display_status(resolver, servers, format: 'console')
     name = resolver ? resolver[:name] : 'Unknown/Custom'
-    servers = resolver ? resolver[:servers] : current_dns
     case format
     when 'console'
       puts "Name: #{name}"
@@ -186,6 +195,11 @@ class Revolver
     output = `networksetup -getdnsservers "#{hardware_port}"`.strip
     return [] if output.include?("There aren't any DNS Servers set")
     output.split("\n")
+  end
+
+  def current_vpn_dns
+    mercurial_json = JSON.parse(`mercurial status --format json`)
+    mercurial_json['dns_servers'] || []
   end
 
   def set_dns(dns_servers, hardware_port = primary_hardware_port)
