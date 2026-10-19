@@ -39,3 +39,7 @@ thoran ALL = NOPASSWD: /usr/sbin/networksetup
 ```
 
 or the same in a file at `/etc/sudoers.d/mercurial`, alongside the entries mercurial wants — see mercurial for those.
+
+## License
+
+MIT

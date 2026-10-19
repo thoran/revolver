@@ -2,7 +2,7 @@
 # revolver
 
 # 20261019
-# 0.13.2
+# 0.13.3
 
 # Description: Switch DNS resolvers at random.
 
@@ -24,7 +24,7 @@ require 'MacOS/IfConfig'
 require 'MacOS/VPN'
 
 class Revolver
-  VERSION = '0.13.2'
+  VERSION = '0.13.3'
 
   RESOLVERS = [
     {

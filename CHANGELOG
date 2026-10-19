@@ -2,6 +2,12 @@
 
 ## 20261019
 
+0.13.3: + LICENSE, and the README section naming it.
+
+1. + LICENSE: the MIT text, copyright 2025-2026 thoran. The year is that of the first commit.
+2. + README.md: a License section, saying MIT.
+3. ~ revolver: /0.13.2/0.13.3/
+
 0.13.2: ~ CHANGELOG: + the items for 0.2.0 to 0.9.0, + entries for 0.0.0 to 0.1.1.
 
 1. ~ CHANGELOG: 0.2.0 to 0.9.0 + their items, as the Changes section of the script header recorded them in each version's commit. 0.11.0 took the header's last state alone, which held only 0.10.0's.
