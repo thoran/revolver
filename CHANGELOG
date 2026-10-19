@@ -2,6 +2,13 @@
 
 ## 20261019
 
+0.13.2: ~ CHANGELOG: + the items for 0.2.0 to 0.9.0, + entries for 0.0.0 to 0.1.1.
+
+1. ~ CHANGELOG: 0.2.0 to 0.9.0 + their items, as the Changes section of the script header recorded them in each version's commit. 0.11.0 took the header's last state alone, which held only 0.10.0's.
+2. + CHANGELOG: 0.0.0, 0.0.1, 0.1.0 and 0.1.1, written from the diffs of the git-importall commits, which carried each version's script but no summary.
+3. ~ CHANGELOG: 0.12.1's summary, the five libraries being those 0.8.2 meant to include and did not.
+4. ~ revolver: /0.13.1/0.13.2/
+
 0.13.1: - the three libraries 0.8.2 included which nothing requires.
 
 1. - lib/Platform/lowercase_os.rb
@@ -18,7 +25,7 @@
 5. ~ README.md: Options + -v, --version.
 6. ~ revolver: /0.12.1/0.13.0/
 
-0.12.1: + the five libraries required but absent from lib/, which loaded only where RUBYLIB reached beyond it.
+0.12.1: + more libraries required but missed in version 0.8.2
 
 1. + lib/Kernel/require_gem.rb: Kernel#require_gem 0.0.0, required by bin/revolver.
 2. + lib/Thoran/Kernel/RequireGem/require_gem.rb: Thoran::Kernel::RequireGem#require_gem 0.0.0, required by Kernel/require_gem.rb.
@@ -67,57 +74,156 @@
 
 0.9.0: Return JSON consistently.
 
+1. ~ display_status(): Return JSON with :servers key as an array instead of :dns_servers key as a string.
+
 
 ## 20260213
 
 0.8.3: Added a notes section for proposed sudoers file changes.
+
+1. + Notes section.
 
 
 ## 20260126
 
 0.8.2: Ensure selecting the correct hardware port; include all non-stdlib and non-gem libraries.
 
+1. ~ primary_hardware_port(): Use MacOS::IfConfig.up_interfaces instead of MacOS::IfConfig.active_interfaces and select only non-virtual interfaces.
+2. + require 'Kernel/require_gem'
+3. /require 'switches.rb'/require_gem 'switches.rb'/
+4. Include all non-stdlib and non-gem libraries.
+
 
 ## 20251005
 
 0.8.1: ~ RESOLVER: - Mullvad (IP's are DOH/T not UDP/53)
+
+1. ~ RESOLVER: - Mullvad (IP's are DOH/T not UDP/53)
 
 
 ## 20250930
 
 0.8.0: + init sub-command, enabling generation of a resolvers JSON data file from the built-in Revolver::RESOLVERS.
 
+1. + require 'fileutils': For directory creation in init command.
+2. + init(): Generates a sample data file with the default Revolver::RESOLVERS at resolvers_data_filepath.
+3. ~ main(): + 'init' sub-command handler.
+4. ~ main(): ~ Usage to include 'init' sub-command.
+
 
 ## 20250930
 
 0.7.0: Be able to load resolvers from a file.
+
+1. ~ Revolver: class methods --> instance methods
+2. + Revolver#initialize: Pass in resolvers dependency.
+3. ~ list(): /RESOLVERS/@resolvers/
+4. ~ status(): /RESOLVERS/@resolvers/
+5. ~ find_resolver(): /RESOLVERS/@resolvers/
+6. ~ random_resolver(): /RESOLVERS/@resolvers/
+7. ~ switches(): + -d, --data, --data_file, --data_filepath, --resolvers_data_filepath
+8. + supplied_resolvers_data_filepath(): User-supplied data filepath via switches.
+9. + default_resolvers_data_filepath(): Return the default resolvers data filepath (~/.config/revolver/resolvers.json).
+10. + resolvers_data_filepath(): Choose either the supplied or the default filepath and expand it.
+11. + resolvers(): Load resolvers from a file if exists, else fallback to Revolver::RESOLVERS.
+12. ~ main(): Instantiate Revolver with resolvers for each sub-command invocation.
 
 
 ## 20250929
 
 0.6.0: Allow 'list' and 'status' commands to return JSON.
 
+1. ~ Revolver.list: + format argument and pass format to display_resolver().
+2. ~ Revolver.status: + format argument and move existing 'console' display logic to display_status().
+3. + Revolver.display_status(): Handle console and JSON output for the 'status' command.
+4. ~ main(): Call Revolver.list with format.
+5. ~ main(): Call Revolver.status with format.
+6. ~ main(): Usage string string: Document format flag for all applicable commands
+
 
 ## 20250929
 
 0.5.0: Randomly select a resolver and optionally return JSON, but don't pull the trigger.
+
+1. + Revolver.spin(): Select a random resolver and return its details (for orchestration).
+2. ~ main(): + 'spin' sub-command handling.
+3. + require 'switches.rb'
+4. + switches(): Allow setting the format for the 'spin' sub-command.
 
 
 ## 20250929
 
 0.4.1: Handle the edge case where the same DNS resolver is given as is current.
 
+1. + verify_proposed_change(): Check whether an effective no-op is happening.
+2. ~ switch(): Verify the proposed change as soon as we have a candidate.
+
 
 ## 20250929
 
 0.4.0: Allow selection of a specific resolver for listing or switching.
+
+1. + find_resolver(): Return the resolver requested by name or raise.
+2. ~ list(): If resolver_name is present then list that resolver only.
+3. ~ switch(): If resolver_name is present, then find that resolver, else choose a random resolver.
+4. ~ main(): Introduce ARGV[1] to list and switch calls; and change the usage string accordingly.
+5. ~ verify_dns_change(): Reduce sleep from 5 to 3 as that seems to be just enough time.
 
 
 ## 20250929
 
 0.3.0: /defocus/revolver/; + list sub-command
 
+1. Renamed from defocus to revolver.
+2. + Revolver.list: Show all resolvers.
+
 
 ## 20250927
 
 0.2.0: Now VPN-aware.
+
+1. + Defocus.vpn_up?
+2. ~ Defocus.switch: Handle either VPN up or not.
+3. + Defocus.switch_with_vpn: Shell out to `mercurial`.
+4. + Defocus.switch_without_vpn: Call set_dns().
+5. ~ Defocus.verify_dns_change: Signature change, passing in old_dns, so as to be able to check old_dns and new_dns are different, because the switch is still a fail if the candidate is current because it means that somehow nothing changed.
+6. ~ Defocus.verify_dns_change: Conditionally sleep(5) for when the VPN is up due to longer switching times.
+
+
+## 20250925
+
+0.1.1: ~ Defocus.switch: the check moved to verify_dns_change(), and set_dns() raising in its place.
+
+1. ~ Defocus.set_dns: raises "networksetup command failed" rather than returning $?.success?.
+2. + Defocus.verify_dns_change: private; after sleep(1), raises unless current_dns is the candidate's servers.
+3. ~ Defocus.switch: calls set_dns() and verify_dns_change(). 0.1.0's message named resolver, which was undefined there, so a failed check raised NameError rather than its own message.
+
+
+## 20250925
+
+0.1.0: ~ Defocus.switch: verifies the change.
+
+1. ~ Defocus.switch: raises where networksetup fails, or where, after sleep(1), current_dns isn't the new resolver's servers.
+
+
+## 20250925
+
+0.0.1: ~ Defocus::RESOLVERS: + source, and four more resolvers.
+
+1. ~ Defocus::RESOLVERS: each resolver + source, the curl wiki's DNS-over-HTTPS list or DNSCrypt's public-resolvers list.
+2. ~ Defocus::RESOLVERS: + CleanBrowsing, + Control D, + NextDNS, + OpenNIC.
+3. ~ Defocus::RESOLVERS: ordered by name.
+
+
+## 20250925
+
+0.0.0: + bin/defocus: switch to a random DNS resolver other than the current one, or show the current one.
+
+1. + Defocus::RESOLVERS: Cloudflare, Google, Quad9, OpenDNS, AdGuard and Mullvad.
+2. + Defocus.current_dns: the DNS servers of the hardware port, from networksetup -getdnsservers.
+3. + Defocus.primary_hardware_port: the hardware port of the first active interface.
+4. + Defocus.set_dns: sudo networksetup -setdnsservers.
+5. + Defocus.random_resolver: any resolver but the current one.
+6. + Defocus.switch
+7. + Defocus.status: interface, current DNS servers and resolver name.
+8. + main(): switch and status sub-commands.
