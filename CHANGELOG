@@ -2,6 +2,14 @@
 
 ## 20260818
 
+0.12.0: + README.md
+
+1. + README.md: what it is, the five sub-commands, the two options, where the data file lives, and the sudoers entries automated running wants. Drawn from usage() and from the Notes section of the script header rather than written afresh.
+2. ~ revolver: /0.11.0/0.12.0/
+
+
+## 20260818
+
 0.11.0: A CHANGELOG in the form changelogger writes, and the Changes section retired from the script header.
 
 1. + CHANGELOG: the entries below. 0.10.0's items come from the Changes section of the script header, which is the only version whose items were recorded anywhere. Every entry before it carries its summary alone, that being all its commit subject held. Nothing is invented, and where there were no items there are none.
