@@ -1,0 +1,87 @@
+# revolver/CHANGELOG
+
+## 20260818
+
+0.11.0: A CHANGELOG in the form changelogger writes, and the Changes section retired from the script header.
+
+1. + CHANGELOG: the entries below. 0.10.0's items come from the Changes section of the script header, which is the only version whose items were recorded anywhere. Every entry before it carries its summary alone, that being all its commit subject held. Nothing is invented, and where there were no items there are none.
+2. ~ bin/revolver: - the Changes section from the header, the CHANGELOG holding it now and the header having carried only the newest version's worth. Same treatment as chromedriver-install 0.6.0.
+3. The versions before 0.2.0 are not here. They predate the git-importall import, which brought the working tree in five commits saying only that, so their summaries were never recorded and cannot be recovered.
+4. ~ revolver: /0.10.1/0.11.0/
+
+
+## 20260818
+
+0.10.1: Populate .gitignore.
+
+1. ~ .gitignore: the whole set for Ruby, being gem and build products, Bundler, RDoc, YARD, editor files, Ruby version managers, test artefacts and .claude. git-boot's root commit made the file and left it empty, and an empty .gitignore reads at a glance as though the rules are there.
+2. ~ revolver: /0.10.0/0.10.1/
+
+
+## 20260227
+
+0.10.0: Report actual DNS in use when VPN is active.
+
+1. ~ status(): Check vpn_up? and use current_vpn_dns instead of current_dns when VPN is active; pass servers to display_status.
+2. ~ display_status(): Accept servers as a parameter instead of falling back to current_dns internally.
+3. + current_vpn_dns(): Query mercurial status --format json for the DNS servers in the active WireGuard config.
+
+
+## 20260213
+
+0.9.0: Return JSON consistently.
+
+
+## 20260213
+
+0.8.3: Added a notes section for proposed sudoers file changes.
+
+
+## 20260126
+
+0.8.2: Ensure selecting the correct hardware port; include all non-stdlib and non-gem libraries.
+
+
+## 20251005
+
+0.8.1: ~ RESOLVER: - Mullvad (IP's are DOH/T not UDP/53)
+
+
+## 20250930
+
+0.8.0: + init sub-command, enabling generation of a resolvers JSON data file from the built-in Revolver::RESOLVERS.
+
+
+## 20250930
+
+0.7.0: Be able to load resolvers from a file.
+
+
+## 20250929
+
+0.6.0: Allow 'list' and 'status' commands to return JSON.
+
+
+## 20250929
+
+0.5.0: Randomly select a resolver and optionally return JSON, but don't pull the trigger.
+
+
+## 20250929
+
+0.4.1: Handle the edge case where the same DNS resolver is given as is current.
+
+
+## 20250929
+
+0.4.0: Allow selection of a specific resolver for listing or switching.
+
+
+## 20250929
+
+0.3.0: /defocus/revolver/; + list sub-command
+
+
+## 20250927
+
+0.2.0: Now VPN-aware.
