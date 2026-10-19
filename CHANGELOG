@@ -1,5 +1,17 @@
 # revolver/CHANGELOG
 
+## 20261019
+
+0.12.1: + the five libraries required but absent from lib/, which loaded only where RUBYLIB reached beyond it.
+
+1. + lib/Kernel/require_gem.rb: Kernel#require_gem 0.0.0, required by bin/revolver.
+2. + lib/Thoran/Kernel/RequireGem/require_gem.rb: Thoran::Kernel::RequireGem#require_gem 0.0.0, required by Kernel/require_gem.rb.
+3. + lib/Thoran/String/Captures/captures.rb: Thoran::String::Captures#captures 0.3.0, required by MacOS/HardwarePort.rb and MacOS/IfConfig.rb.
+4. + lib/String/to_regexp.rb: String#to_regexp 0.3.0, required by MacOS/IfConfig.rb.
+5. + lib/Regexp/to_regexp.rb: Regexp#to_regexp 0.0.0, required by MacOS/IfConfig.rb.
+6. ~ revolver: /0.12.0/0.12.1/
+
+
 ## 20260818
 
 0.12.0: + README.md
