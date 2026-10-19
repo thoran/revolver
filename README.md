@@ -20,6 +20,7 @@ revolver <command> [args] [options]
 
 - `-d`, `--data`, `--data_file`, `--data_filepath`, `--resolvers_data_filepath` — a filepath to a resolvers JSON file. Defaults to `~/.config/revolver/resolvers.json`.
 - `-f`, `--format FORMAT` — `console` (the default) or `json`. Applies to `list`, `spin` and `status`.
+- `-v`, `--version` — show the version.
 
 ## Resolvers
 

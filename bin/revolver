@@ -2,7 +2,7 @@
 # revolver
 
 # 20261019
-# 0.12.1
+# 0.13.0
 
 # Description: Switch DNS resolvers at random.
 
@@ -24,6 +24,8 @@ require 'MacOS/IfConfig'
 require 'MacOS/VPN'
 
 class Revolver
+  VERSION = '0.13.0'
+
   RESOLVERS = [
     {
       name: 'AdGuard',
@@ -235,6 +237,10 @@ def switches
   @switches ||= Switches.new do |s|
     s.set(:d, :data, :data_file, :data_filepath, :resolvers_data_filepath)
     s.set(:f, :format)
+    s.perform(:v, :version) do
+      puts "revolver #{Revolver::VERSION}"
+      exit
+    end
   end
 end
 
@@ -271,6 +277,7 @@ def init
 end
 
 def main
+  switches
   case ARGV[0]
   when 'init'
     init
@@ -296,6 +303,7 @@ def main
     puts "                       (default: ~/.config/revolver/resolvers.json)"
     puts "  -f, --format FORMAT  Output format: console (default) or json"
     puts "                       (applies to: list, spin, status)"
+    puts "  -v, --version        Show the version"
   end
 rescue => e
   puts "Error: #{e.message}"

@@ -2,6 +2,15 @@
 
 ## 20261019
 
+0.13.0: + -v, --version
+
+1. + Revolver::VERSION
+2. ~ switches(): + s.perform(:v, :version), which prints the version and exits.
+3. ~ main(): calls switches first, since otherwise a bare --version reaches the usage branch, which never parses the switches.
+4. ~ main(): usage + -v, --version.
+5. ~ README.md: Options + -v, --version.
+6. ~ revolver: /0.12.1/0.13.0/
+
 0.12.1: + the five libraries required but absent from lib/, which loaded only where RUBYLIB reached beyond it.
 
 1. + lib/Kernel/require_gem.rb: Kernel#require_gem 0.0.0, required by bin/revolver.
