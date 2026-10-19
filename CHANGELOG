@@ -2,6 +2,13 @@
 
 ## 20261019
 
+0.13.1: - the three libraries 0.8.2 included which nothing requires.
+
+1. - lib/Platform/lowercase_os.rb
+2. - lib/Module/module_functions.rb: required only by Platform/lowercase_os.rb.
+3. - lib/Platform/Arch.rb: comments alone.
+4. ~ revolver: /0.13.0/0.13.1/
+
 0.13.0: + -v, --version
 
 1. + Revolver::VERSION
